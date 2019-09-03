@@ -48,6 +48,17 @@ const RdfaEditorImportSnippetPlugin = Service.extend({
   }),
 
   /**
+   * @method suggestHint
+   *
+   */
+  async suggestHints(context, editor) {
+    let snippets = this.get('importRdfaSnippet.snippets');
+    if(snippets.length === 0) return [];
+    else
+      return [{ component: 'editor-plugins/suggested-snippets-import', info: {snippets, editor}}];
+  },
+
+  /**
    * Given context object, tries to detect a context the plugin can work on
    *
    * @method detectRelevantContext
