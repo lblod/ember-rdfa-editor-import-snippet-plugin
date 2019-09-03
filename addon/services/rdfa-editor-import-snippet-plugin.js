@@ -1,10 +1,11 @@
 import { getOwner } from '@ember/application';
 import Service from '@ember/service';
+import { inject as service } from '@ember/service';
 import EmberObject, { computed } from '@ember/object';
 import { task } from 'ember-concurrency';
 
 /**
- * Service responsible for correct annotation of dates
+ * Service responsible for matching rdfa-snippets
  *
  * @module editor-import-snippet-plugin
  * @class RdfaEditorImportSnippetPlugin
@@ -13,10 +14,7 @@ import { task } from 'ember-concurrency';
  */
 const RdfaEditorImportSnippetPlugin = Service.extend({
 
-  init(){
-    this._super(...arguments);
-    const config = getOwner(this).resolveRegistration('config:environment');
-  },
+  importRdfaSnippet: service(),
 
   /**
    * task to handle the incoming events from the editor dispatcher
@@ -31,23 +29,63 @@ const RdfaEditorImportSnippetPlugin = Service.extend({
    * @public
    */
   execute: task(function * (hrId, contexts, hintsRegistry, editor) {
-    if (contexts.length === 0) return [];
+    if (contexts.length === 0) return;
+    let myHints = hintsRegistry.getHintsFromPlugin(this.get('who'));
 
     const hints = [];
-    contexts.forEach((context) => {
-      let relevantContext = this.detectRelevantContext(context)
-      if (relevantContext) {
-        hintsRegistry.removeHintsInRegion(context.region, hrId, this.get('who'));
-        hints.pushObjects(this.generateHintsForContext(context));
+    for(let context of contexts){
+      let potentialContext = context.context.slice(-1)[0] || {}; // We take the most specific subject of the context.
+      let snippets = this.snippetsForContext(potentialContext); //TODO: assumes the snippets download is ready.
+      if (snippets.length === 0 ) continue;
+
+      let semanticNodeLocation = [ context.semanticNode.start, context.semanticNode.end ];
+      let updatedSemanticNodeLocation = hintsRegistry.updateLocationToCurrentIndex(hrId, semanticNodeLocation);
+
+      // We store largest region from hint, so there can only be one hint with region containing other regions for a resource.
+      let existingHintContainingLocation = this.getHintContainingLocationForResource(myHints, updatedSemanticNodeLocation, potentialContext.subject);
+      let newHintContainingLocation = this.getHintContainingLocationForResource(hints, semanticNodeLocation, potentialContext.subject);
+
+      // Case: no bigger regions have been found, not in the hintsRegistry, nor in the newly created hints
+      // We can simply add the hint.
+      if(!existingHintContainingLocation && !newHintContainingLocation){
+        hintsRegistry.removeHintsInRegion(semanticNodeLocation, hrId, this.get('who'));
+        hints.push(this.generateCard(hrId, hintsRegistry, editor, semanticNodeLocation, 'Nieuwe snippets', snippets));
+        continue;
       }
-    });
-    const cards = hints.map( (hint) => this.generateCard(hrId, hintsRegistry, editor, hint));
-    if(cards.length > 0){
-      hintsRegistry.addHints(hrId, this.get('who'), cards);
+
+      // Case: we have found hints in the registry which contains current location
+      // Then append the new snippet data to the hint
+      if(existingHintContainingLocation && !newHintContainingLocation){
+        let updatedSnippets = this.appendSnippets(existingHintContainingLocation.info.snippets, snippets);
+        hintsRegistry.removeHintsInRegion(existingHintContainingLocation.location, hintsRegistry.currentIndex(), this.get('who'));
+        hints.push(this.generateCard(hintsRegistry.currentIndex(), hintsRegistry, editor, existingHintContainingLocation.location, 'Nieuwe snippets', updatedSnippets));
+      }
+
+      // if(newHintContainingLocation) => means hint will be pushed after current loop, no further action is needed.
+      // Not possible there is an additionnal snippet since the state of importRdfaSnippet didn't change
+      // during the exection of this method
+    }
+    if(hints.length > 0){
+      hintsRegistry.addHints(hrId, this.get('who'), hints);
     }
   }),
 
+  getHintContainingLocationForResource(hints, location, resource){
+    return hints.filter(h => h.location[0] <= location[0] && location[1] <= h.location[1] && h.info.resource === resource)[0];
+  },
+
+  appendSnippets(existingSnippets, newSnippets){
+    let mergedSnippets = existingSnippets;
+    newSnippets.forEach(ns => {
+      if(!existingSnippets.find(es => ns.snippet == es.snippet)){
+        mergedSnippets.pushObject(ns);
+      }
+    });
+    return mergedSnippets;
+  },
+
   /**
+   * When pressing the '+' button, a card is shown.
    * @method suggestHint
    *
    */
@@ -59,36 +97,18 @@ const RdfaEditorImportSnippetPlugin = Service.extend({
   },
 
   /**
-   * Given context object, tries to detect a context the plugin can work on
+   * Tries to find snippets for context
    *
-   * @method detectRelevantContext
+   * @method snippetsForContext
    *
    * @param {Object} context Text snippet at a specific location with an RDFa context
    *
-   * @return {String} URI of context if found, else empty string.
+   * @return {Array} [ snippet ]
    *
    * @private
    */
-  detectRelevantContext(context){
-    return context.text.toLowerCase().indexOf('hello') >= 0;
-  },
-
-
-
-  /**
-   * Maps location of substring back within reference location
-   *
-   * @method normalizeLocation
-   *
-   * @param {[int,int]} [start, end] Location withing string
-   * @param {[int,int]} [start, end] reference location
-   *
-   * @return {[int,int]} [start, end] absolute location
-   *
-   * @private
-   */
-  normalizeLocation(location, reference){
-    return [location[0] + reference[0], location[1] + reference[0]];
+  snippetsForContext(context){
+    return this.importRdfaSnippet.snippetsForResource(context.subject);
   },
 
   /**
@@ -105,38 +125,19 @@ const RdfaEditorImportSnippetPlugin = Service.extend({
    *
    * @private
    */
-  generateCard(hrId, hintsRegistry, editor, hint){
+  generateCard(hrId, hintsRegistry, editor, location, text, snippets){
     return EmberObject.create({
       info: {
         label: this.get('who'),
-        plainValue: hint.text,
-        htmlString: '<b>hello world</b>',
-        location: hint.location,
+        plainValue: text,
+        location: location,
+        resource: snippets[0].resourceUri,
+        snippets,
         hrId, hintsRegistry, editor
       },
-      location: hint.location,
+      location,
       card: this.get('who')
     });
-  },
-
-  /**
-   * Generates a hint, given a context
-   *
-   * @method generateHintsForContext
-   *
-   * @param {Object} context Text snippet at a specific location with an RDFa context
-   *
-   * @return {Object} [{dateString, location}]
-   *
-   * @private
-   */
-  generateHintsForContext(context){
-    const hints = [];
-    const index = context.text.toLowerCase().indexOf('hello');
-    const text = context.text.slice(index, index+5);
-    const location = this.normalizeLocation([index, index + 5], context.region);
-    hints.push({text, location});
-    return hints;
   }
 });
 
