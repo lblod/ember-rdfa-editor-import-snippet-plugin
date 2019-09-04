@@ -123,8 +123,3 @@ export default Service.extend({
   }
 
 });
-//Test with:
-// EDIT
-//http://localhost:4200/import/edit?source=http://localhost:4203/snippets/example-2.html&target=http://foo&mock=true
-// NEW
-//http://localhost:4200/import/new?source=http://localhost:4203/snippets/example-2.html&mock=true
