@@ -153,7 +153,7 @@ const RdfaEditorImportSnippetPlugin = Service.extend({
   generateCard(hrId, hintsRegistry, editor, location, text, snippets){
     return EmberObject.create({
       info: {
-        label: this.get('who'),
+        who: this.get('who'),
         plainValue: text,
         location: location,
         resource: snippets[0].resourceUri,
