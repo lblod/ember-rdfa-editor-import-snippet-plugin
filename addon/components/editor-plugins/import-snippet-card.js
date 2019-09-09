@@ -106,6 +106,7 @@ export default Component.extend({
         resource: this.resource
       });
 
+      this.cleanUpRemainingSnippets();
       this.editor.update(selection, {
         add: {
           prefix: Object.keys(newPrefixes).map(k => `${k}: ${newPrefixes[k]}`).join(' ')
@@ -125,8 +126,6 @@ export default Component.extend({
           innerHTML: this.snippets[0].rdfaBlock.semanticNode.domNode.innerHTML
         }
       });
-      this.hintsRegistry.removeHintsAtLocation(this.location, this.hrId, this.who);
-      this.cleanUpRemainingSnippets();
     }
   }
 });
