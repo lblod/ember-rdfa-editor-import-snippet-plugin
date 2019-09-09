@@ -91,8 +91,6 @@ export default Component.extend({
     });
   },
 
-  //TODO: test more (edge cases)
-
   actions: {
     insert(){
       let updatedLocation = this.get('hintsRegistry').updateLocationToCurrentIndex(this.get('hrId'), this.get('location'));
