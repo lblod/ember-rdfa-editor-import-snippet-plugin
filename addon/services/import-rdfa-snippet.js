@@ -80,9 +80,10 @@ export default Service.extend({
   */
   async processSnippet(params, data){
     try{
-      let snippet = await data.text();
-      let template = this.htmlToElement(snippet);
+      let origSnippet = await data.text();
+      let template = this.htmlToElement(origSnippet);
       let rdfaBlocks = this.contextScanner.analyse(template);
+
       let outerRdfaBlock = rdfaBlocks.find(b => b.context.find(c => c.subject));
       if(!outerRdfaBlock){
         this.errors.pushObject({source: params.source, 'details': `No RDFA content found for ${params.uri}`});
@@ -90,7 +91,7 @@ export default Service.extend({
       }
       let resourceUri = (outerRdfaBlock.context.find(c =>  c.subject )).subject;
 
-      this.storeSnippet(resourceUri, params.source, snippet);
+      this.storeSnippet(resourceUri, params.source, origSnippet, outerRdfaBlock);
     }
     catch(err){
       this.errors.pushObject({source: params.source, 'details': `Error fetching data ${params.uri}: ${err}`});
@@ -118,8 +119,8 @@ export default Service.extend({
    * @param {String} snippet
    * @private
   */
-  storeSnippet(resourceUri, source, snippet){
-    this.snippets.pushObject({ resourceUri, source, snippet } );
+  storeSnippet(resourceUri, source, origSnippet, rdfaBlock){
+    this.snippets.pushObject({ resourceUri, source, origSnippet, rdfaBlock} );
   }
 
 });
