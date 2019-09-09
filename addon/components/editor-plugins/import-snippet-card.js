@@ -1,6 +1,8 @@
 import { reads } from '@ember/object/computed';
 import Component from '@ember/component';
 import layout from '../../templates/components/editor-plugins/import-snippet-card';
+import ContextScanner from '@lblod/marawa/rdfa-context-scanner';
+import { inject as service } from '@ember/service';
 
 /**
 * Card displaying a hint of the Date plugin
@@ -11,6 +13,8 @@ import layout from '../../templates/components/editor-plugins/import-snippet-car
 */
 export default Component.extend({
   layout,
+
+  importRdfaSnippet: service(),
 
   /**
    * Region on which the card applies
@@ -44,11 +48,85 @@ export default Component.extend({
   */
   hintsRegistry: reads('info.hintsRegistry'),
 
+  resource: reads('info.resource'),
+
+  snippets: reads('info.snippets'),
+
+  who: reads('info.who'),
+
+  getVocab(rdfaBlock){
+    return (((rdfaBlock || {}).semanticNode || {}).rdfaAttributes || {}).vocab;
+  },
+
+  getOuterRdfaBlockForResource(domNode, resource, location = []){
+    let contextScanner = new ContextScanner();
+    let rdfaBlocks = contextScanner.analyse(domNode, location);
+    let outerRdfaBlock = rdfaBlocks.find(b => b.context.find(c => c.subject == resource ));
+    return outerRdfaBlock;
+  },
+
+  getPrefixes(rdfaBlock){
+    return ((rdfaBlock || {}).semanticNode || {}).rdfaPrefixes || {};
+  },
+
+  diffObjectBfromA(b, a){
+    return Object.keys(b).reduce((acc, key) => {
+      if(!a[key]){
+        acc[key] = b[key];
+      }
+      else if (a[key] !== b[key]){
+        acc[key] = b[key];
+      }
+      return acc;
+    }, {});
+  },
+
+  cleanUpRemainingSnippets(){
+    this.importRdfaSnippet.removeAllSnippetsForResource(this.resource);
+    let myHints = this.hintsRegistry.getHintsFromPlugin(this.get('who'));
+    myHints.forEach(h => {
+      if(h.info.resource == this.resource){
+        this.hintsRegistry.removeHintsAtLocation(h.location, this.hrId, this.who);
+      }
+    });
+  },
+
+  //TODO: test more (edge cases)
+
   actions: {
     insert(){
-      this.get('hintsRegistry').removeHintsAtLocation(this.get('location'), this.get('hrId'), 'editor-plugins/import-snippet-card');
-      const mappedLocation = this.get('hintsRegistry').updateLocationToCurrentIndex(this.get('hrId'), this.get('location'));
-      this.get('editor').replaceTextWithHTML(...mappedLocation, this.get('info').htmlString);
+      let updatedLocation = this.get('hintsRegistry').updateLocationToCurrentIndex(this.get('hrId'), this.get('location'));
+      let rdfaBlockDoc = this.getOuterRdfaBlockForResource(this.editor.rootNode, this.resource, updatedLocation);
+      let prefixBlockDoc = this.getPrefixes(rdfaBlockDoc);
+      let prefixesSnippet = this.getPrefixes(this.snippets[0].rdfaBlock);
+      let newPrefixes = this.diffObjectBfromA(prefixesSnippet, prefixBlockDoc);
+      let newVocab = this.getVocab(rdfaBlockDoc) == this.getVocab(this.snippets[0].rdfaBlock) ? null : this.getVocab(this.snippets[0].rdfaBlock);
+
+      const selection = this.editor.selectContext(updatedLocation, {
+        resource: this.resource
+      });
+
+      this.editor.update(selection, {
+        add: {
+          prefix: Object.keys(newPrefixes).map(k => `${k}: ${newPrefixes[k]}`).join(' ')
+        }
+      });
+
+      if(newVocab){
+        this.editor.update(selection, {
+          add: {
+            vocab: newVocab
+          }
+        });
+      }
+
+      this.editor.update(selection, {
+        set: {
+          innerHTML: this.snippets[0].rdfaBlock.semanticNode.domNode.innerHTML
+        }
+      });
+      this.hintsRegistry.removeHintsAtLocation(this.location, this.hrId, this.who);
+      this.cleanUpRemainingSnippets();
     }
   }
 });
