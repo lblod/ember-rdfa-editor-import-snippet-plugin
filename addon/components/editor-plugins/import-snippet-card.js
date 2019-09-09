@@ -112,11 +112,13 @@ export default Component.extend({
         }
       });
 
-      this.editor.update(selection, {
-        add: {
-          prefix: Object.keys(newPrefixes).map(k => `${k}: ${newPrefixes[k]}`).join(' ')
-        }
-      });
+      if(Object.keys(newPrefixes).length > 0){
+        this.editor.update(selection, {
+          add: {
+            prefix: Object.keys(newPrefixes).map(k => `${k}: ${newPrefixes[k]}`).join(' ')
+          }
+        });
+      }
 
       if(newVocab){
         this.editor.update(selection, {

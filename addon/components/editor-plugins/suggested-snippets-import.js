@@ -25,34 +25,32 @@ export default Component.extend({
     insert(){
       //Brutally inserts snippet for now
       //TODO: needs further discussion on how the selectionApi may be used to get current vocab and prefix
-      let rdfaBlock = this.importRdfaSnippet.snippets.firstObject.rdfaBlock;
+      let snippetData = this.importRdfaSnippet.snippets.firstObject;
+      let rdfaBlock = snippetData.rdfaBlock;
       let newPrefixes = this.getPrefixes(rdfaBlock);
       let newVocab = this.getVocab(rdfaBlock);
       const selection = this.editor.selectCurrentSelection();
 
-      this.editor.update(selection, {
-        set: {
-          typeof: rdfaBlock.semanticNode.rdfaAttributes.typeof.join(" ")
-        }
-      });
+      let setResource = {
+        typeof: rdfaBlock.semanticNode.rdfaAttributes.typeof.join(" "),
+        resource: snippetData.resourceUri
+      };
 
-      this.editor.update(selection, {
-        add: {
-          prefix: Object.keys(newPrefixes).map(k => `${k}: ${newPrefixes[k]}`).join(' ')
-        }
-      });
-
-      if(newVocab){
-        this.editor.update(selection, {
-          add: {
-            vocab: newVocab
-          }
-        });
+      if(Object.keys(newPrefixes).length > 0){
+        setResource['prefix'] = Object.keys(newPrefixes).map(k => `${k}: ${newPrefixes[k]}`).join(' ');
       }
 
+      if(newVocab){
+        setResource['vocab'] = newVocab;
+      }
+
+       this.editor.update(selection, {
+         set: setResource
+       });
+
       this.editor.update(selection, {
         set: {
-          innerHTML: rdfaBlock.semanticNode.domNode.innerHTML
+          innerHTML: rdfaBlock.semanticNode.domNode.outerHTML
         }
       });
 
