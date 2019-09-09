@@ -107,6 +107,13 @@ export default Component.extend({
       });
 
       this.cleanUpRemainingSnippets();
+
+      this.editor.update(selection, {
+        set: {
+          typeof: this.snippets[0].rdfaBlock.semanticNode.rdfaAttributes.typeof.join(" ")
+        }
+      });
+
       this.editor.update(selection, {
         add: {
           prefix: Object.keys(newPrefixes).map(k => `${k}: ${newPrefixes[k]}`).join(' ')
@@ -126,6 +133,7 @@ export default Component.extend({
           innerHTML: this.snippets[0].rdfaBlock.semanticNode.domNode.innerHTML
         }
       });
+
     }
   }
 });
