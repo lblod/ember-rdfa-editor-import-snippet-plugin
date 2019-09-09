@@ -51,6 +51,17 @@ export default Service.extend({
   },
 
   /**
+   * Removes all snippets for a resource URI;
+   * @method removeAllSnippetsForResource
+   * @param {String} uri
+   * @public
+  */
+  removeAllSnippetsForResource(resourceUri){
+    let updatedSnippets = this.snippets.filter(s => s.resourceUri != resourceUri); //if this turns out too slow, we can move this to hash
+    this.set('snippets', updatedSnippets);
+  },
+
+  /**
    * Fetches snippet from remote
    * @method processSnippet
    * @param {Object} { source }
