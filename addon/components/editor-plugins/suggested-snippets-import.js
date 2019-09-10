@@ -50,7 +50,7 @@ export default Component.extend({
 
       this.editor.update(selection, {
         set: {
-          innerHTML: rdfaBlock.semanticNode.domNode.outerHTML
+          innerHTML: rdfaBlock.semanticNode.domNode.innerHTML
         }
       });
 
