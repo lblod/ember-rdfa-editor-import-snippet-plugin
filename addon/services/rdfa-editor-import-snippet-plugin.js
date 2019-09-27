@@ -45,6 +45,8 @@ const RdfaEditorImportSnippetPlugin = Service.extend({
                                   /\
      *                           r  r
      * Note: this is not going to work for self referring (nested) resources.
+     * TODO: On second thought, the logic might be very complicated and there will be probably some tools (context, 
+     *       pernet to counter this...)
      */
     for(let context of contexts){
       let potentialContext = context.context.slice(-1)[0] || {}; // We take the most specific subject of the context.
