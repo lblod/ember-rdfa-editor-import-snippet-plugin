@@ -1,13 +1,12 @@
 
 <div class="modal-dialog modal-dialog--small">
 	<div class="modal-dialog__header">
-		<p class="u-spacer--tiny">Een wegreglement werd gevonden.<br>
-		  <strong>Wenst u deze in te voegen?</strong>
-		</p>
+		<p class="u-spacer--tiny">Er is relevante informatie {{!-- met als type "type" --}} uit een externe bron beschikbaar.<p>
+		<p><strong>Wenst u deze in te voegen?</strong></p>
 	</div>
 	<div class="modal-dialog__footer">
 		{{#wu-button-group}}
-		  {{wu-button label="Voeg wegreglement in" size="small" isNarrow=true onClick=(action "insert")}}
+		  {{wu-button label="Voeg informatie in" size="small" isNarrow=true onClick=(action "insert")}}
 		{{/wu-button-group}}
 	</div>
 </div>
