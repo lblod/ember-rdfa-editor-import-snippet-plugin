@@ -1,7 +1,5 @@
-import { getOwner } from '@ember/application';
-import Service from '@ember/service';
-import { inject as service } from '@ember/service';
-import EmberObject, { computed } from '@ember/object';
+import Service, { inject as service } from '@ember/service';
+import EmberObject from '@ember/object';
 import { task } from 'ember-concurrency';
 
 /**
@@ -13,8 +11,25 @@ import { task } from 'ember-concurrency';
  * @extends EmberService
  */
 const RdfaEditorImportSnippetPlugin = Service.extend({
-
   importRdfaSnippet: service(),
+
+  /**
+   * When pressing the '+' button, a card is shown.
+   * @method suggestHint
+   * @public
+   */
+  async suggestHints(context, editor) {
+    const snippets = this.importRdfaSnippet.snippets;
+    if (snippets.length) {
+      return [{
+        component: 'editor-plugins/suggested-snippets-import',
+        info: { snippets, editor }
+      }];
+    } else {
+      return [];
+    }
+  },
+
 
   /**
    * task to handle the incoming events from the editor dispatcher
@@ -45,7 +60,7 @@ const RdfaEditorImportSnippetPlugin = Service.extend({
                                   /\
      *                           r  r
      * Note: this is not going to work for self referring (nested) resources.
-     * TODO: On second thought, the logic might be very complicated and there will be probably some tools (context, 
+     * TODO: On second thought, the logic might be very complicated and there will be probably some tools (context,
      *       pernet to counter this...)
      */
     for(let context of contexts){
@@ -109,18 +124,6 @@ const RdfaEditorImportSnippetPlugin = Service.extend({
 
   containsLocation(refLocation, testLocation){
       return refLocation[0] <= testLocation[0] && testLocation[1] <= refLocation[1];
-  },
-
-  /**
-   * When pressing the '+' button, a card is shown.
-   * @method suggestHint
-   *
-   */
-  async suggestHints(context, editor) {
-    let snippets = this.get('importRdfaSnippet.snippets');
-    if(snippets.length === 0) return [];
-    else
-      return [{ component: 'editor-plugins/suggested-snippets-import', info: {snippets, editor}}];
   },
 
   /**
