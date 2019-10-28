@@ -3,6 +3,20 @@ import { A } from '@ember/array';
 import fetch from 'fetch';
 import ContextScanner from '@lblod/marawa/rdfa-context-scanner';
 
+class RdfaSnippet {
+  constructor(resourceUri, resourceTypes, source, content, resourceNode) {
+    this.resourceUri = resourceUri;
+    this.resourceTypes = resourceTypes;
+    this.source = source;
+    this.content = content;
+    this.resourceNode = resourceNode;
+  }
+
+  get resourceTypeString() {
+    return (this.resourceTypes || []).join(', ');
+  }
+}
+
 /**
  * Service responsible for fetching and storing a snippet
  *
@@ -34,9 +48,9 @@ export default Service.extend({
    * @public
   */
   async downloadSnippet(params){
-    let data =  await this.getSnippet(params);
-    if(!data) return;
-    await this.processSnippet(params, data);
+    const data =  await this.getSnippet(params);
+    if (data)
+      await this.processSnippet(params, data);
   },
 
   /**
@@ -57,7 +71,7 @@ export default Service.extend({
    * @public
   */
   removeAllSnippetsForResource(resourceUri){
-    let updatedSnippets = this.snippets.filter(s => s.resourceUri != resourceUri); //if this turns out too slow, we can move this to hash
+    const updatedSnippets = this.snippets.filter(s => s.resourceUri != resourceUri); //if this turns out too slow, we can move this to hash
     this.set('snippets', updatedSnippets);
   },
 
@@ -72,11 +86,10 @@ export default Service.extend({
     let data = null;
     try {
       data = await fetch(params.source, { headers: { 'Accept': 'text/html' } });
-      if(!data){
+      if (!data) {
         this.errors.pushObject({source: params.source, 'details': `No data found for ${params.uri}`});
       }
-    }
-    catch(err){
+    } catch(err) {
       this.errors.pushObject({source: params.source, 'details': `Error fetching data ${params.uri}: ${err}`});
     }
     return data;
@@ -90,21 +103,25 @@ export default Service.extend({
    * @private
   */
   async processSnippet(params, data){
-    try{
-      let origSnippet = await data.text();
-      let template = this.htmlToElement(origSnippet);
-      let rdfaBlocks = this.contextScanner.analyse(template);
+    try {
+      const snippet = await data.text();
+      const template = this.htmlToElement(snippet);
+      const rdfaBlocks = this.contextScanner.analyse(template);
 
-      let outerRdfaBlock = rdfaBlocks.find(b => b.context.find(c => c.subject));
-      if(!outerRdfaBlock){
-        this.errors.pushObject({source: params.source, 'details': `No RDFA content found for ${params.uri}`});
-        return;
+      // TODO the way the outerRdfaBlock is selected is not correct.
+      // The semanticNode of the first RDFa block is not necessarily the node containing the top-level subject.
+      // The new context scanner interface should offer us a way to easily get an annoted parent rich node.
+      let outerRdfaBlock = rdfaBlocks.find(b => b.context.length);
+      if (!outerRdfaBlock){
+        this.errors.pushObject({source: params.source, 'details': `No RDFa content found for ${params.uri}`});
+      } else {
+        const resourceUri = outerRdfaBlock.context.find(t => t.subject).subject;  // first triple might not have a subject if the snippet starts with property="..."
+        const resourceTypes = outerRdfaBlock.context.filter(t => t.subject == resourceUri && t.predicate == 'a').map(t => t.object);
+        const resourceNode = outerRdfaBlock.semanticNode;
+        this.storeSnippet(resourceUri, resourceTypes, params.source, snippet, resourceNode);
       }
-      let resourceUri = (outerRdfaBlock.context.find(c =>  c.subject )).subject;
-
-      this.storeSnippet(resourceUri, params.source, origSnippet, outerRdfaBlock);
     }
-    catch(err){
+    catch(err) {
       this.errors.pushObject({source: params.source, 'details': `Error fetching data ${params.uri}: ${err}`});
     }
   },
@@ -117,7 +134,7 @@ export default Service.extend({
    * @private
   */
   htmlToElement(html) {
-    let template = document.createElement('template');
+    const template = document.createElement('template');
     template.innerHTML = html;
     return template.content.firstChild;
   },
@@ -125,13 +142,14 @@ export default Service.extend({
   /**
    * Stores snippet
    * @method storeSnippet
-   * @param {String} uri
-   * @param {String} sourceUri
-   * @param {String} snippet
+   * @param {String} resourceUri
+   * @param {String} source
+   * @param {String} content
+   * @param {RichNode} resourceNode
    * @private
   */
-  storeSnippet(resourceUri, source, origSnippet, rdfaBlock){
-    this.snippets.pushObject({ resourceUri, source, origSnippet, rdfaBlock} );
+  storeSnippet(resourceUri, resourceTypes, source, content, resourceNode){
+    this.snippets.pushObject(new RdfaSnippet(resourceUri, resourceTypes, source, content, resourceNode));
   }
 
 });
