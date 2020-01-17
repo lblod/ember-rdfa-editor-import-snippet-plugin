@@ -105,8 +105,10 @@ export default Service.extend({
   async processSnippet(params, data){
     try {
       const snippet = await data.text();
-      const template = this.htmlToElement(snippet);
-      const rdfaBlocks = this.contextScanner.analyse(template);
+      const snippetElements = this.htmlToElements(snippet);
+      const rdfaBlocks = snippetElements
+            .map(e => this.contextScanner.analyse(e))
+            .reduce((acc, blocks) => [...acc, ...blocks], []);
 
       // TODO the way the outerRdfaBlock is selected is not correct.
       // The semanticNode of the first RDFa block is not necessarily the node containing the top-level subject.
@@ -133,10 +135,10 @@ export default Service.extend({
    * @return {Object}
    * @private
   */
-  htmlToElement(html) {
+  htmlToElements(html) {
     const template = document.createElement('template');
     template.innerHTML = html;
-    return template.content.firstChild;
+    return [...template.content.children];
   },
 
   /**
