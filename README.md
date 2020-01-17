@@ -42,7 +42,7 @@ The service has two public properties availible you can use in the host app, to 
 ```
 
 ## rdfa-editor-import-snippet-plugin
-This is the main plugin service, to be used as other plugins. This will scan the document and see wether it can match snippets with resources in your document.
+This is the main plugin service, to be used as other plugins. This will scan the document and see whether it can match snippets with resources in your document.
 
 Contributing
 ------------------------------------------------------------------------------
