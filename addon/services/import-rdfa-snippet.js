@@ -85,7 +85,8 @@ export default Service.extend({
   async getSnippet(params){
     let data = null;
     try {
-      data = await fetch(params.source, { headers: { 'Accept': 'text/html' } });
+      data = await fetch(params.source, { credentials: "include" } );
+
       if (!data) {
         this.errors.pushObject({source: params.source, 'details': `No data found for ${params.uri}`});
       }
