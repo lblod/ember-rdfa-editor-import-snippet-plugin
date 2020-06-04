@@ -78,14 +78,16 @@ export default Service.extend({
   /**
    * Fetches snippet from remote
    * @method processSnippet
-   * @param {Object} { source }
-   * @param {Object} { text } (result from ember fetch call)
+   * @param params.omitCredentials {String} if truthy, the fetch call will omit credentials (this is important for endpoints that only provide simple CORS headers). When not set or falsy we fetch with "include" credentials. This means the endpoint needs to provide the Access-Control-Allow-Credentials and Access-Controlled-Allow-Origin needs to be set to the requesting domain ('*' is not allowed)
+   * @param params.source {String} the URL of the document to fetch
+   * @result {Response} result from ember fetch call
    * @private
   */
   async getSnippet(params){
     let data = null;
     try {
-      data = await fetch(params.source, { credentials: "include" } );
+      const credentials = params.omitCredentials ? "omit" : "include";
+      data = await fetch(params.source, { credentials } );
 
       if (!data) {
         this.errors.pushObject({source: params.source, 'details': `No data found for ${params.uri}`});
