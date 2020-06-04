@@ -17,7 +17,7 @@
     {{#each snippets as |snippet|}}
       <li class="link-list__item">
         <a class="" {{action "insert" snippet}}>
-          Voeg {{snippet.resourceTypeString}} in
+          Voeg informatie uit <a href="{{snippet.source}}" target="_blank">{{snippet.source}}</a> in.
         </a>
       </li>
     {{/each}}
