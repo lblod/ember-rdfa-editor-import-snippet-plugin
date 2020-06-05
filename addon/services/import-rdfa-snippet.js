@@ -3,11 +3,17 @@ import { A } from '@ember/array';
 import fetch from 'fetch';
 import ContextScanner from '@lblod/marawa/rdfa-context-scanner';
 
+/*
+ * @module editor-import-snippet-plugin
+ * @class ImportRdfaSnippet
+ * @constructor
+ */
 class RdfaSnippet {
-  constructor(source, content, blocks) {
+  constructor(source, type, content, blocks) {
     this.source = source;
     this.content = content;
     this.blocks = blocks;
+    this.type = type;
   }
 
   get resourceTypeString() {
@@ -27,16 +33,17 @@ class RdfaSnippet {
  * @constructor
  * @extends EmberService
  */
-export default Service.extend({
-  errors: null,
-  snippets: null,
+export default class ImportRdfaSnippet extends Service {
+  errors;
 
-  init() {
-    this._super(...arguments);
-    this.set('snippets', A([]));
-    this.set('errors', A([]));
-    this.set('contextScanner', new ContextScanner());
-  },
+  snippets;
+
+  constructor() {
+    super(...arguments);
+    this.snippets = A();
+    this.errors = A();
+    this.contextScanner = new ContextScanner();
+  }
 
   /**
    * Download, processes and stores snippet
@@ -49,29 +56,31 @@ export default Service.extend({
     const data =  await this.getSnippet(params);
     if (data)
       await this.processSnippet(params, data);
-  },
+  }
 
   /**
-   * Returns all snippets for a resource URI or empty array;
-   * @method snippetsForResource
-   * @param {String} uri
-   * @return [ { SnippetDataFields } ]
+   * Remove a snippet from the store, typically after using it
+   * @method removeSnippet
+   * @param {RdfaSnippet} snippet
+   * @return void
    * @public
-  */
-  snippetsForResource(resourceUri){
-    return this.snippets.filter(s => s.resourceUri == resourceUri); //if this turns out too slow, we can move this to hash
-  },
+   */
+  removeSnippet(snippet) {
+    const index = this.snippets.indexOf(snippet);
+    if (index >= 0) {
+      this.snippets.splice(index,1);
+    }
+  }
 
   /**
-   * Removes all snippets for a resource URI;
-   * @method removeAllSnippetsForResource
-   * @param {String} uri
-   * @public
-  */
-  removeAllSnippetsForResource(resourceUri){
-    const updatedSnippets = this.snippets.filter(s => s.resourceUri != resourceUri); //if this turns out too slow, we can move this to hash
-    this.set('snippets', updatedSnippets);
-  },
+   * Return snippets for a given type, current supported types are 'roadsign' and 'generic'
+   * @method snippetsForType
+   * @params {String} type
+   * @return {Array} array of RdfaSnippets
+   */
+  snippetsForType(type) {
+    return this.snippets.filter((snippet) => snippet.type === type);
+  }
 
   /**
    * Fetches snippet from remote
@@ -94,7 +103,25 @@ export default Service.extend({
       this.errors.pushObject({source: params.source, 'details': `Error fetching data ${params.uri}: ${err}`});
     }
     return data;
-  },
+  }
+
+  /**
+   * heuristic to determine the type of snippet
+   * currently just a very basic check if a type exists in the snippet.
+   * @method determineType
+   */
+  determineType(params, snippet, rdfaBlocks) {
+    const triples = rdfaBlocks.map((block) => block.context)
+          .reduce((prevValue, next) => [...prevValue,...next])
+          .uniq();
+    const types = triples.filter((triple) => triple.predicate === 'a').map((triple) => triple.object);
+    if (types.includes('https://data.vlaanderen.be/ns/mobiliteit#Verkeersbord-Verkeersteken')) {
+      return "roadsign";
+    }
+    else {
+      return "generic";
+    }
+  }
 
   /**
    * Processes and stores snippet
@@ -110,12 +137,13 @@ export default Service.extend({
       const rdfaBlocks = snippetElements
             .map(e => this.contextScanner.analyse(e))
             .reduce((acc, blocks) => [...acc, ...blocks], []);
-      this.storeSnippet(params.source, snippet, rdfaBlocks);
+      const type = this.determineType(params, snippet, rdfaBlocks);
+      this.storeSnippet(params.source, type, snippet, rdfaBlocks);
     }
     catch(err) {
       this.errors.pushObject({source: params.source, 'details': `Error fetching data ${params.uri}: ${err}`});
     }
-  },
+  }
 
   /**
    * Make HTML Content Template from string
@@ -128,7 +156,7 @@ export default Service.extend({
     const template = document.createElement('template');
     template.innerHTML = html;
     return [...template.content.children];
-  },
+  }
 
   /**
    * Stores snippet
@@ -138,8 +166,7 @@ export default Service.extend({
    * @param {Array} block array of richnodes representing the content of the snippet
    * @private
   */
-  storeSnippet(source, content, blocks){
-    this.snippets.pushObject(new RdfaSnippet(source, content, blocks));
+  storeSnippet(source, type, content, blocks){
+    this.snippets.pushObject(new RdfaSnippet(source, type, content, blocks));
   }
-
-});
+}
