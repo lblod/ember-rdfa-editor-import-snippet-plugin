@@ -56,6 +56,7 @@ export default class RdfaEditorImportSnippetPlugin extends Service {
         location,
         card: IMPORT_COMPONENT,
         info: {
+          card: IMPORT_COMPONENT,
           hintsRegistry,
           editor,
           location,
