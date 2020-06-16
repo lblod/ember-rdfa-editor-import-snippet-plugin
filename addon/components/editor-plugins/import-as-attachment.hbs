@@ -1,0 +1,13 @@
+{{#each this.snippets as |snippet|}}
+  <div class="modal-dialog modal-dialog--small">
+	  <div class="modal-dialog__header">
+   		<p class="u-spacer--tiny">Er is een <a href="{{snippet.source}}" target="_blank">document</a> met verkeersbord opstellingen beschikbaar.</p>
+  		<p><strong>Wenst u dit document als bijlage in te voegen?</strong></p>
+  	</div>
+  	<div class="modal-dialog__footer">
+      <WuButtonGroup>
+        <WuButton @label="Bijlage invoegen" @size="small" @isNarrow=true @onClick={{action this.insert snippet}} />
+      </WuButtonGroup>
+  	</div>
+  </div>
+{{/each}}

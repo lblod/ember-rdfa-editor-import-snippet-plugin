@@ -94,7 +94,7 @@ export default class ImportRdfaSnippet extends Service {
     let data = null;
     try {
       const credentials = params.omitCredentials ? "omit" : "include";
-      data = await fetch(params.source, { credentials } );
+      data = await fetch(params.source, { credentials, headers: { 'Accept': 'text/html' } } );
 
       if (!data) {
         this.errors.pushObject({source: params.source, 'details': `No data found for ${params.uri}`});
@@ -114,7 +114,7 @@ export default class ImportRdfaSnippet extends Service {
     const triples = rdfaBlocks.map((block) => block.context)
           .reduce((prevValue, next) => [...prevValue,...next])
           .uniq();
-    const types = triples.filter((triple) => triple.predicate === 'a').map((triple) => triple.object);
+    const types = triples.filter((triple) => triple.predicate === 'a').map((triple) => triple.object).uniq();
     if (types.includes('https://data.vlaanderen.be/ns/mobiliteit#Verkeersbord-Verkeersteken')) {
       return "roadsign";
     }
