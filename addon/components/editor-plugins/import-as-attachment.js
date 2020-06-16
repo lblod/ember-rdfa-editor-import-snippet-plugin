@@ -34,6 +34,6 @@ export default class EditorPluginsImportAsAttachmentComponent extends Component 
         property: 'http://lblod.data.gift/vocabularies/editor/isLumpNode'
       }
     });
-    this.hintsRegistry.removeHintsAtLocation(this.info.location, this.info.card);
+    this.hintsRegistry.removeHints({ region: this.info.location, scope: this.info.card});
   }
 }
