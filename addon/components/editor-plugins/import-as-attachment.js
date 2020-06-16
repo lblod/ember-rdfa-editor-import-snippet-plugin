@@ -27,7 +27,7 @@ export default class EditorPluginsImportAsAttachmentComponent extends Component 
     const selection = this.editor.selectContext(this.info.location, this.info.selectionContext);
     this.editor.update(selection, {
       append: {
-        innerHTML: `Bijlage uit externe bron <a href="${snippet.source}"${new URL(snippet.source).hostname}</a>
+        innerHTML: `Bijlage uit externe bron <a href="${snippet.source}">${new URL(snippet.source).hostname}</a>
                      <div property="http://data.europa.eu/eli/ontology#cites" resource="${snippet.source}" typeof="foaf:Document">
                          <div property="http://www.w3.org/ns/prov#value">${snippet.content}</div>
                      </div>`,
