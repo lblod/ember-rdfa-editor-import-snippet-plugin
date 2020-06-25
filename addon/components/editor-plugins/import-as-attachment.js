@@ -31,7 +31,7 @@ export default class EditorPluginsImportAsAttachmentComponent extends Component 
                       <div property="http://www.w3.org/ns/prov#value">${snippet.content}</div>
                      `,
         property: [ 'http://lblod.data.gift/vocabularies/editor/isLumpNode', 'http://data.europa.eu/eli/ontology#cites' ],
-        typeof: [ 'http://xmlns.com/foaf/0.1/Document', 'http://mu.semte.ch/vocabularies/ext/SnippetAttachment' ],
+        typeof: [ 'http://xmlns.com/foaf/0.1/Document', 'http://lblod.data.gift/vocabularies/editor/SnippetAttachment' ],
         resource: snippet.source
       }
     });
