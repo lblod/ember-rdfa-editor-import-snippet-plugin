@@ -5,7 +5,7 @@
   		<p><strong>Wenst u dit document als bijlage in te voegen?</strong></p>
   	</div>
   	<div class="modal-dialog__footer">
-        <button {{on "click" this.insert snippet}} class='say-button'>Bijlage invoegen</button>
+        <button {{on "click" (fn this.insert snippet)}} class='say-button'>Bijlage invoegen</button>
   	</div>
   </div>
 {{/each}}
