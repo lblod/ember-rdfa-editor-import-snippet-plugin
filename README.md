@@ -5,7 +5,7 @@ Plugin allowing importing of external RDFA snippets and inserting it in the docu
 Compatibility
 -------------------------------------------------------------------------------
 
-* Ember.js v3.12 or above
+* Ember.js v3.16 or above
 * Ember CLI v2.13 or above
 * Node.js v10 or above
 
@@ -40,6 +40,14 @@ The service has two public properties availible you can use in the host app, to 
   errors: A([]),
   snippets: A([])
 ```
+
+### How to trigger it on GN
+
+This is just an example for developers on how to trigger this plugin and check if the changes made to the package work.
+1 - First go to this url: https://dev.kleinbord.lblod.info/select-road-sign
+2 - Fill the form and press the button
+3 - GN will open and you have to go to a new or existing meeting, and edit a behandeling.
+4 - Then you have 2 different options: the first one is to click on the template button and select directly the "document invoegen" in order to insert the data into the document. The second one is to insert a besluit and insert the data as an attachment,for this you will need to insert a besluit template and click on the button "Bijlage invoegen"
 
 ## rdfa-editor-import-snippet-plugin
 This is the main plugin service, to be used as other plugins. This will scan the document and see whether it can match snippets with resources in your document.

@@ -5,9 +5,7 @@
   		<p><strong>Wenst u dit document als bijlage in te voegen?</strong></p>
   	</div>
   	<div class="modal-dialog__footer">
-      <WuButtonGroup>
-        <WuButton @label="Bijlage invoegen" @size="small" @isNarrow=true @onClick={{action this.insert snippet}} />
-      </WuButtonGroup>
+        <button {{on "click" (fn this.insert snippet)}} class='say-button'>Bijlage invoegen</button>
   	</div>
   </div>
 {{/each}}

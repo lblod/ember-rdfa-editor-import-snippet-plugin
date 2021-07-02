@@ -16,9 +16,7 @@
   <ul class="link-list link-list--bordered">
     {{#each this.info.snippets as |snippet|}}
       <li class="link-list__item">
-        <WuButtonGroup>
-          <WuButton @label="document invoegen" @size="small" @isNarrow=true @onClick={{action this.insert snippet}} />
-        </WuButtonGroup>
+        <button {{on "click" (fn this.insert snippet)}} class='say-button'>document invoegen</button>
       </li>
     {{/each}}
   </ul>
