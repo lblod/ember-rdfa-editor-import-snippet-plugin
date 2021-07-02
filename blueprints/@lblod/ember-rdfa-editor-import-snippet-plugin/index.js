@@ -1,5 +1,5 @@
 /* eslint-env node */
-const existsSync = require('exists-sync');
+const fs = require('fs');
 
 const profilesFile = 'app/config/editor-profiles.js';
 
@@ -18,7 +18,7 @@ module.exports = {
   async afterInstall(options) {
     const pluginName = options.originBlueprintName.slice('@lblod/ember-'.length);
 
-    if( existsSync(profilesFile) ){
+    if( fs.existsSync(profilesFile) ){
       try {
         await this.insertPluginNameAtKey("all", pluginName);
         await this.insertPluginNameAtKey("default", pluginName, " "); /* the extra space here,
