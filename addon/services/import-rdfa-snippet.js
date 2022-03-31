@@ -1,6 +1,5 @@
 import Service from '@ember/service';
 import { A } from '@ember/array';
-import fetch from 'fetch';
 import ContextScanner from '@lblod/marawa/rdfa-context-scanner';
 
 /*
@@ -51,11 +50,11 @@ export default class ImportRdfaSnippet extends Service {
    * @param {Object}: {source}
    * @return {String}
    * @public
-  */
-  async downloadSnippet(params){
-    const data =  await this.getSnippet(params);
-    if (data)
-      await this.processSnippet(params, data);
+   */
+  async downloadSnippet(params) {
+    const data = await this.getSnippet(params);
+    if (data) await this.processSnippet(params, data);
+    console.log(this.snippets);
   }
 
   /**
@@ -68,7 +67,7 @@ export default class ImportRdfaSnippet extends Service {
   removeSnippet(snippet) {
     const index = this.snippets.indexOf(snippet);
     if (index >= 0) {
-      this.snippets.splice(index,1);
+      this.snippets.splice(index, 1);
     }
   }
 
@@ -79,6 +78,7 @@ export default class ImportRdfaSnippet extends Service {
    * @return {Array} array of RdfaSnippets
    */
   snippetsForType(type) {
+    console.log(this.snippets);
     return this.snippets.filter((snippet) => snippet.type === type);
   }
 
@@ -89,18 +89,27 @@ export default class ImportRdfaSnippet extends Service {
    * @param params.source {String} the URL of the document to fetch
    * @result {Response} result from ember fetch call
    * @private
-  */
-  async getSnippet(params){
+   */
+  async getSnippet(params) {
     let data = null;
     try {
-      const credentials = params.omitCredentials ? "omit" : "include";
-      data = await fetch(params.source, { credentials, headers: { 'Accept': 'text/html' } } );
+      const credentials = params.omitCredentials ? 'omit' : 'include';
+      data = await fetch(params.source, {
+        credentials,
+        headers: { Accept: 'text/html' },
+      });
 
       if (!data) {
-        this.errors.pushObject({source: params.source, 'details': `No data found for ${params.uri}`});
+        this.errors.pushObject({
+          source: params.source,
+          details: `No data found for ${params.uri}`,
+        });
       }
-    } catch(err) {
-      this.errors.pushObject({source: params.source, 'details': `Error fetching data ${params.uri}: ${err}`});
+    } catch (err) {
+      this.errors.pushObject({
+        source: params.source,
+        details: `Error fetching data ${params.uri}: ${err}`,
+      });
     }
     return data;
   }
@@ -111,15 +120,22 @@ export default class ImportRdfaSnippet extends Service {
    * @method determineType
    */
   determineType(params, snippet, rdfaBlocks) {
-    const triples = rdfaBlocks.map((block) => block.context)
-          .reduce((prevValue, next) => [...prevValue,...next])
-          .uniq();
-    const types = triples.filter((triple) => triple.predicate === 'a').map((triple) => triple.object).uniq();
-    if (types.includes('https://data.vlaanderen.be/ns/mobiliteit#Verkeersbord-Verkeersteken')) {
-      return "roadsign";
-    }
-    else {
-      return "generic";
+    const triples = rdfaBlocks
+      .map((block) => block.context)
+      .reduce((prevValue, next) => [...prevValue, ...next])
+      .filter((v, i, a) => a.indexOf(v) === i); //This filters only unique values
+    const types = triples
+      .filter((triple) => triple.predicate === 'a')
+      .map((triple) => triple.object)
+      .filter((v, i, a) => a.indexOf(v) === i); //This filters only unique values
+    if (
+      types.includes(
+        'https://data.vlaanderen.be/ns/mobiliteit#Verkeersbord-Verkeersteken'
+      )
+    ) {
+      return 'roadsign';
+    } else {
+      return 'generic';
     }
   }
 
@@ -129,19 +145,21 @@ export default class ImportRdfaSnippet extends Service {
    * @param {Object} { source }
    * @param {Object} { text } (result from ember fetch call)
    * @private
-  */
-  async processSnippet(params, data){
+   */
+  async processSnippet(params, data) {
     try {
       const snippet = await data.text();
       const snippetElements = this.htmlToElements(snippet);
       const rdfaBlocks = snippetElements
-            .map(e => this.contextScanner.analyse(e))
-            .reduce((acc, blocks) => [...acc, ...blocks], []);
+        .map((e) => this.contextScanner.analyse(e))
+        .reduce((acc, blocks) => [...acc, ...blocks], []);
       const type = this.determineType(params, snippet, rdfaBlocks);
       this.storeSnippet(params.source, type, snippet, rdfaBlocks);
-    }
-    catch(err) {
-      this.errors.pushObject({source: params.source, 'details': `Error fetching data ${params.uri}: ${err}`});
+    } catch (err) {
+      this.errors.pushObject({
+        source: params.source,
+        details: `Error fetching data ${params.uri}: ${err}`,
+      });
     }
   }
 
@@ -151,7 +169,7 @@ export default class ImportRdfaSnippet extends Service {
    * @param {String}
    * @return {Object}
    * @private
-  */
+   */
   htmlToElements(html) {
     const template = document.createElement('template');
     template.innerHTML = html;
@@ -165,8 +183,8 @@ export default class ImportRdfaSnippet extends Service {
    * @param {String} content the unparsed text content of the snippet
    * @param {Array} block array of richnodes representing the content of the snippet
    * @private
-  */
-  storeSnippet(source, type, content, blocks){
+   */
+  storeSnippet(source, type, content, blocks) {
     this.snippets.pushObject(new RdfaSnippet(source, type, content, blocks));
   }
 }
