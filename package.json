@@ -5,7 +5,7 @@
   "keywords": [
     "ember-addon"
   ],
-  "repository": "",
+  "repository": "https://github.com/lblod/ember-rdfa-editor-import-snippet-plugin",
   "license": "MIT",
   "author": "",
   "directories": {
