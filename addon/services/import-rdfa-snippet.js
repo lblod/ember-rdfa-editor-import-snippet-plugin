@@ -54,7 +54,6 @@ export default class ImportRdfaSnippet extends Service {
   async downloadSnippet(params) {
     const data = await this.getSnippet(params);
     if (data) await this.processSnippet(params, data);
-    console.log(this.snippets);
   }
 
   /**
@@ -78,7 +77,6 @@ export default class ImportRdfaSnippet extends Service {
    * @return {Array} array of RdfaSnippets
    */
   snippetsForType(type) {
-    console.log(this.snippets);
     return this.snippets.filter((snippet) => snippet.type === type);
   }
 

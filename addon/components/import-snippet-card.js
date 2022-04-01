@@ -54,24 +54,26 @@ export default class EditorPluginsImportAsAttachmentComponent extends Component 
   generateSnippetHtml(snippet, type) {
     if (type === 'attachment') {
       return `
-        <div 
-          resource="${snippet.source}" 
-          property="http://lblod.data.gift/vocabularies/editor/isLumpNode http://data.europa.eu/eli/ontology#cites"
-          typeof="http://xmlns.com/foaf/0.1/Document http://lblod.data.gift/vocabularies/editor/SnippetAttachment"
-        >
-          Bijlage uit externe bron <a href="${snippet.source}">${
+        <div property="http://lblod.data.gift/vocabularies/editor/isLumpNode">
+          <div 
+            resource="${snippet.source}" 
+            property="http://data.europa.eu/eli/ontology#related_to"
+            typeof="http://xmlns.com/foaf/0.1/Document http://lblod.data.gift/vocabularies/editor/SnippetAttachment"
+          >
+            Bijlage uit externe bron <a href="${snippet.source}">${
         new URL(snippet.source).hostname
       }</a>
-          <div property="http://www.w3.org/ns/prov#value">${
-            snippet.content
-          }</div>
+            <div property="http://www.w3.org/ns/prov#value">${
+              snippet.content
+            }</div>
+          </div>
         </div>
       `;
     } else {
       return `
         <div property="http://lblod.data.gift/vocabularies/editor/isLumpNode">
           Bijlage uit externe bron
-          <div property="http://data.europa.eu/eli/ontology#cites" resource="${snippet.source}">
+          <div property="http://data.europa.eu/eli/ontology#related_to" resource="${snippet.source}">
               <div property="http://www.w3.org/ns/prov#value">${snippet.content}</div>
           </div>
         </div>

@@ -9,9 +9,9 @@
       <p class="u-spacer--tiny">Er is een <a href="{{snippet.source}}" target="_blank">document</a> in te voeren</p>
       <p><strong>Wenst u dit document in te voegen?</strong></p>
       {{#if this.besluitNode}}
-        <button {{on "click" (fn this.insert snippet 'attachment')}} class='say-button'>Bijlage invoegen</button>
+        <AuButton {{on "click" (fn this.insert snippet 'attachment')}} >Bijlage invoegen</AuButton>
       {{/if}}
-      <button {{on "click" (fn this.insert snippet)}} class='say-button'>Document invoegen</button>
+      <AuButton {{on "click" (fn this.insert snippet)}} >Document invoegen</AuButton>
     </c.content>
   </AuCard>
 {{/each}}
