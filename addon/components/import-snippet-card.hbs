@@ -2,11 +2,11 @@
   <AuCard @flex={{true}} @divided={{true}} @expandable={{true}} @shadow={{true}} @isOpenInitially={{true}} @size="small" as |c|>
     <c.header>
       <AuHeading @level="3" @skin="6">
-        Knipsel importeren
+        Document importeren
       </AuHeading>
     </c.header>
     <c.content>
-      <p class="u-spacer--tiny">Er is een <a href="{{snippet.source}}" target="_blank">document</a> in te voeren</p>
+      <p class="u-spacer--tiny">Er is een <a href="{{snippet.source}}" target="_blank" rel="noopener noreferrer">document</a> beschikbaar</p>
       <p><strong>Wenst u dit document in te voegen?</strong></p>
       {{#if this.besluitNode}}
         <AuButton {{on "click" (fn this.insert snippet 'attachment')}} >Bijlage invoegen</AuButton>
