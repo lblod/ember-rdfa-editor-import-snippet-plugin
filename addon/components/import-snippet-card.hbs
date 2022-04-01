@@ -6,12 +6,12 @@
       </AuHeading>
     </c.header>
     <c.content>
-      <p class="u-spacer--tiny">Er is een <a href="{{snippet.source}}" target="_blank">document</a> beschikbaar</p>
+      <p class="u-spacer--tiny">Er is een <a href="{{snippet.source}}" target="_blank" rel="noopener noreferrer">document</a> beschikbaar</p>
       <p><strong>Wenst u dit document in te voegen?</strong></p>
       {{#if this.besluitNode}}
-        <button {{on "click" (fn this.insert snippet 'attachment')}} class='say-button'>Bijlage invoegen</button>
+        <button class='say-button' type="button" {{on "click" (fn this.insert snippet 'attachment')}}>Bijlage invoegen</button>
       {{/if}}
-      <button {{on "click" (fn this.insert snippet)}} class='say-button'>Document invoegen</button>
+      <button class='say-button' type="button" {{on "click" (fn this.insert snippet)}}>Document invoegen</button>
     </c.content>
   </AuCard>
 {{/each}}
