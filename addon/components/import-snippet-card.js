@@ -14,23 +14,31 @@ export default class EditorPluginsImportAsAttachmentComponent extends Component 
       'selectionChanged',
       this.selectionChangedHandler
     );
+    this.args.controller.addTransactionStepListener(this.onTransactionUpdate);
+  }
+
+  modifiesSelection(steps) {
+    return steps.some(
+      (step) => step.type === 'selection-step' || step.type === 'operation-step'
+    );
   }
 
   @action
-  selectionChangedHandler() {
-    this.snippets = this.importRdfaSnippet.snippetsForType('roadsign');
-    const limitedDatastore = this.args.controller.datastore.limitToRange(
-      this.args.controller.selection.lastRange,
-      'rangeIsInside'
-    );
-    const besluit = limitedDatastore
-      .match(null, 'a', '>http://data.vlaanderen.be/ns/besluit#Besluit')
-      .asSubjectNodes()
-      .next().value;
-    if (besluit) {
-      this.besluitNode = [...besluit.nodes][0];
-    } else {
-      this.besluitNode = undefined;
+  onTransactionUpdate(transaction, steps) {
+    if (this.modifiesSelection(steps)) {
+      this.snippets = this.importRdfaSnippet.snippetsForType('roadsign');
+      const limitedDatastore = transaction
+        .getCurrentDataStore()
+        .limitToRange(transaction.currentSelection.lastRange, 'rangeIsInside');
+      const besluit = limitedDatastore
+        .match(null, 'a', '>http://data.vlaanderen.be/ns/besluit#Besluit')
+        .asSubjectNodes()
+        .next().value;
+      if (besluit) {
+        this.besluitNode = [...besluit.nodes][0];
+      } else {
+        this.besluitNode = undefined;
+      }
     }
   }
 
@@ -47,7 +55,12 @@ export default class EditorPluginsImportAsAttachmentComponent extends Component 
     } else {
       rangeToInsert = this.args.controller.selection.lastRange;
     }
-    this.args.controller.executeCommand('insert-html', html, rangeToInsert);
+    this.args.controller.perform((tr) => {
+      tr.commands.insertHtml({
+        htmlString: html,
+        range: rangeToInsert,
+      });
+    });
     this.importRdfaSnippet.removeSnippet(snippet);
   }
 

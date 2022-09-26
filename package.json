@@ -26,17 +26,17 @@
     "test:ember-compatibility": "ember try:each"
   },
   "dependencies": {
-    "ember-auto-import": "^2.4.0",
     "@glimmer/component": "^1.0.4",
     "@glimmer/tracking": "^1.0.4",
+    "@lblod/marawa": "^0.8.0-beta.2",
+    "ember-auto-import": "^2.4.0",
     "ember-cli-babel": "^7.26.10",
     "ember-cli-htmlbars": "^5.7.2",
-    "uuid": "^8.3.2",
-    "@lblod/marawa": "^0.8.0-beta.2"
+    "uuid": "^8.3.2"
   },
   "peerDependencies": {
     "@appuniversum/ember-appuniversum": "^1.5.0",
-    "@lblod/ember-rdfa-editor": ">=0.63.1",
+    "@lblod/ember-rdfa-editor": "github:lblod/ember-rdfa-editor#transactional-edits",
     "ember-concurrency": "^2.2.0"
   },
   "devDependencies": {
@@ -45,7 +45,7 @@
     "@ember/test-helpers": "^2.6.0",
     "@glimmer/component": "^1.0.3",
     "@glimmer/tracking": "^1.0.3",
-    "@lblod/ember-rdfa-editor": ">=0.63.1",
+    "@lblod/ember-rdfa-editor": "github:lblod/ember-rdfa-editor#transactional-edits",
     "babel-eslint": "^10.1.0",
     "broccoli-asset-rev": "^3.0.0",
     "ember-cli": "~3.28.5",
