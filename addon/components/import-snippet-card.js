@@ -3,7 +3,7 @@ import { inject as service } from '@ember/service';
 import { action } from '@ember/object';
 import { tracked } from '@glimmer/tracking';
 
-export default class EditorPluginsImportAsAttachmentComponent extends Component {
+export default class ImportSnippetCard extends Component {
   @service importRdfaSnippet;
   @tracked snippets = [];
   @tracked besluitNode;
@@ -18,9 +18,17 @@ export default class EditorPluginsImportAsAttachmentComponent extends Component 
 
   @action
   selectionChangedHandler() {
+    const { controller } = this.args;
+    const selectedRange = controller.selection.lastRange;
+    if (!selectedRange) {
+      console.info(
+        'Selection did not have a range, skipping handling of the selectionChanged event'
+      );
+      return;
+    }
     this.snippets = this.importRdfaSnippet.snippetsForType('roadsign');
-    const limitedDatastore = this.args.controller.datastore.limitToRange(
-      this.args.controller.selection.lastRange,
+    const limitedDatastore = controller.datastore.limitToRange(
+      selectedRange,
       'rangeIsInside'
     );
     const besluit = limitedDatastore
@@ -47,16 +55,20 @@ export default class EditorPluginsImportAsAttachmentComponent extends Component 
     } else {
       rangeToInsert = this.args.controller.selection.lastRange;
     }
-    this.args.controller.executeCommand('insert-html', html, rangeToInsert);
-    this.importRdfaSnippet.removeSnippet(snippet);
+    if (rangeToInsert) {
+      this.args.controller.executeCommand('insert-html', html, rangeToInsert);
+      this.importRdfaSnippet.removeSnippet(snippet);
+    } else {
+      console.warn('Could not find a range to insert, so we skipped inserting');
+    }
   }
 
   generateSnippetHtml(snippet, type) {
     if (type === 'attachment') {
       return `
         <div property="http://lblod.data.gift/vocabularies/editor/isLumpNode">
-          <div 
-            resource="${snippet.source}" 
+          <div
+            resource="${snippet.source}"
             property="http://data.europa.eu/eli/ontology#related_to"
             typeof="http://xmlns.com/foaf/0.1/Document http://lblod.data.gift/vocabularies/editor/SnippetAttachment"
           >
