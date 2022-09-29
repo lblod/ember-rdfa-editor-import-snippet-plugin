@@ -3,7 +3,7 @@ import { inject as service } from '@ember/service';
 import { action } from '@ember/object';
 import { tracked } from '@glimmer/tracking';
 
-export default class EditorPluginsImportAsAttachmentComponent extends Component {
+export default class ImportSnippetCard extends Component {
   @service importRdfaSnippet;
   @tracked snippets = [];
   @tracked besluitNode;
@@ -55,8 +55,8 @@ export default class EditorPluginsImportAsAttachmentComponent extends Component 
     if (type === 'attachment') {
       return `
         <div property="http://lblod.data.gift/vocabularies/editor/isLumpNode">
-          <div 
-            resource="${snippet.source}" 
+          <div
+            resource="${snippet.source}"
             property="http://data.europa.eu/eli/ontology#related_to"
             typeof="http://xmlns.com/foaf/0.1/Document http://lblod.data.gift/vocabularies/editor/SnippetAttachment"
           >
