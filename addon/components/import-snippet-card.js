@@ -18,9 +18,17 @@ export default class ImportSnippetCard extends Component {
 
   @action
   selectionChangedHandler() {
+    const { controller } = this.args;
+    const selectedRange = controller.selection.lastRange;
+    if (!selectedRange) {
+      console.info(
+        'Selection did not have a range, skipping handling of the selectionChanged event'
+      );
+      return;
+    }
     this.snippets = this.importRdfaSnippet.snippetsForType('roadsign');
-    const limitedDatastore = this.args.controller.datastore.limitToRange(
-      this.args.controller.selection.lastRange,
+    const limitedDatastore = controller.datastore.limitToRange(
+      selectedRange,
       'rangeIsInside'
     );
     const besluit = limitedDatastore
@@ -47,8 +55,12 @@ export default class ImportSnippetCard extends Component {
     } else {
       rangeToInsert = this.args.controller.selection.lastRange;
     }
-    this.args.controller.executeCommand('insert-html', html, rangeToInsert);
-    this.importRdfaSnippet.removeSnippet(snippet);
+    if (rangeToInsert) {
+      this.args.controller.executeCommand('insert-html', html, rangeToInsert);
+      this.importRdfaSnippet.removeSnippet(snippet);
+    } else {
+      console.warn('Could not find a range to insert, so we skipped inserting');
+    }
   }
 
   generateSnippetHtml(snippet, type) {
