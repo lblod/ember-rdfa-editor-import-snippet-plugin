@@ -1,4 +1,26 @@
 
+
+
+## 0.9.2 (2022-10-07)
+
+#### :house: Internal
+* [#14](https://github.com/lblod/ember-rdfa-editor-import-snippet-plugin/pull/14) Add release-it packages and release script ([@elpoelma](https://github.com/elpoelma))
+
+#### Committers: 1
+- Elena Poelman ([@elpoelma](https://github.com/elpoelma))
+
+## 0.9.1 (2022-09-29)
+
+#### :bug: Bug Fix
+* [#10](https://github.com/lblod/ember-rdfa-editor-import-snippet-plugin/pull/10) fix(selection-handler): handle cases where selection has no ranges ([@abeforgit](https://github.com/abeforgit))
+
+#### :house: Internal
+* [#9](https://github.com/lblod/ember-rdfa-editor-import-snippet-plugin/pull/9) refactor(component): rename class to be consistent with filename ([@abeforgit](https://github.com/abeforgit))
+
+#### Committers: 1
+- Arne Bertrand ([@abeforgit](https://github.com/abeforgit))
+
+
 ## 0.9.0 (2022-09-09)
 
 #### :boom: Breaking Change
