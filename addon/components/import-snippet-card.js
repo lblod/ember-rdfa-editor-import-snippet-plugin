@@ -2,94 +2,79 @@ import Component from '@glimmer/component';
 import { inject as service } from '@ember/service';
 import { action } from '@ember/object';
 import { tracked } from '@glimmer/tracking';
-
+import {
+  DOMParser as ProseParser,
+} from 'prosemirror-model';
 export default class ImportSnippetCard extends Component {
   @service importRdfaSnippet;
-  @tracked snippets = [];
-  @tracked besluitNode;
 
-  constructor() {
-    super(...arguments);
-    this.args.controller.onEvent(
-      'selectionChanged',
-      this.selectionChangedHandler
-    );
+  get controller() {
+    return this.args.controller;
   }
 
-  @action
-  selectionChangedHandler() {
-    const { controller } = this.args;
-    const selectedRange = controller.selection.lastRange;
-    if (!selectedRange) {
+  get snippets() {
+    const selection = this.controller.state.selection;
+    if (!selection.from) {
       console.info(
-        'Selection did not have a range, skipping handling of the selectionChanged event'
+        'Selection did not have a from position, skipping handling of the selectionChanged event'
       );
-      return;
+      return [];
     }
-    this.snippets = this.importRdfaSnippet.snippetsForType('roadsign');
-    const limitedDatastore = controller.datastore.limitToRange(
-      selectedRange,
-      'rangeIsInside'
-    );
-    const besluit = limitedDatastore
-      .match(null, 'a', '>http://data.vlaanderen.be/ns/besluit#Besluit')
-      .asSubjectNodes()
-      .next().value;
-    if (besluit) {
-      this.besluitNode = [...besluit.nodes][0];
-    } else {
-      this.besluitNode = undefined;
-    }
+    return this.importRdfaSnippet.snippetsForType('roadsign');
+  }
+
+  get insertRange(){
+    let range = this.controller.state.selection;
+    this.controller.state.doc.descendants((node, pos) => {
+      if(node.attrs['typeof']?.includes('besluit:Besluit') || node.attrs['typeof']?.includes('http://data.vlaanderen.be/ns/besluit#Besluit')){
+        range = { from: pos + node.nodeSize - 1, to: pos + node.nodeSize - 1};
+        return false;
+      }
+    });
+    return range;
   }
 
   @action
   insert(snippet, type) {
-    const html = this.generateSnippetHtml(snippet, type);
-    let rangeToInsert;
-    if (this.besluitNode) {
-      rangeToInsert = this.args.controller.rangeFactory.fromInNode(
-        this.besluitNode,
-        this.besluitNode.getMaxOffset(),
-        this.besluitNode.getMaxOffset()
-      );
-    } else {
-      rangeToInsert = this.args.controller.selection.lastRange;
-    }
-    if (rangeToInsert) {
-      this.args.controller.executeCommand('insert-html', html, rangeToInsert);
+    const insertRange = this.insertRange;
+    if (insertRange) {
+      const node = this.generateSnippetHtml(snippet, type)
+      this.controller.withTransaction((tr) => {
+        return tr.replaceRangeWith(insertRange.from, insertRange.to, node);
+      })
       this.importRdfaSnippet.removeSnippet(snippet);
     } else {
       console.warn('Could not find a range to insert, so we skipped inserting');
     }
   }
 
+  @action
   generateSnippetHtml(snippet, type) {
+    const domParser = new DOMParser();
+    const contentFragment = ProseParser.fromSchema(this.controller.schema).parse(
+      domParser.parseFromString(snippet.content, 'text/html')
+    ).content;
+    const { schema} = this.controller;
     if (type === 'attachment') {
-      return `
-        <div property="http://lblod.data.gift/vocabularies/editor/isLumpNode">
-          <div
-            resource="${snippet.source}"
-            property="http://data.europa.eu/eli/ontology#related_to"
-            typeof="http://xmlns.com/foaf/0.1/Document http://lblod.data.gift/vocabularies/editor/SnippetAttachment"
-          >
-            Bijlage uit externe bron <a href="${snippet.source}">${
-        new URL(snippet.source).hostname
-      }</a>
-            <div property="http://www.w3.org/ns/prov#value">${
-              snippet.content
-            }</div>
-          </div>
-        </div>
-      `;
+      return schema.node('block_rdfa', { property: "http://lblod.data.gift/vocabularies/editor/isLumpNode" }, [
+        schema.node('block_rdfa', { resource: snippet.resource, 
+                             property: "http://data.europa.eu/eli/ontology#related_to", 
+                             typeof: "http://xmlns.com/foaf/0.1/Document http://lblod.data.gift/vocabularies/editor/SnippetAttachment" }, [
+                              schema.node('paragraph', {}, [
+                                schema.text('Bijlage uit externe bron '),
+                                schema.text(new URL(snippet.source).hostname, [mark('link')]),
+                              ]),
+                              schema.node('block_rdfa', { property: "http://www.w3.org/ns/prov#value"}, contentFragment)
+                             ])
+      ])
     } else {
-      return `
-        <div property="http://lblod.data.gift/vocabularies/editor/isLumpNode">
-          Bijlage uit externe bron
-          <div property="http://data.europa.eu/eli/ontology#related_to" resource="${snippet.source}">
-              <div property="http://www.w3.org/ns/prov#value">${snippet.content}</div>
-          </div>
-        </div>
-      `;
+      return schema.node('block_rdfa', { property: "http://lblod.data.gift/vocabularies/editor/isLumpNode" }, [
+        schema.node('paragraph', {}, [
+          schema.text('Bijlage uit externe bron'),
+        ]),
+        schema.node('block_rdfa', { property: "http://data.europa.eu/eli/ontology#related_to", resource: snippet.source }, [
+          schema.node('block_rdfa', { property: "http://www.w3.org/ns/prov#value" }, contentFragment)
+        ])]);
     }
   }
 }
