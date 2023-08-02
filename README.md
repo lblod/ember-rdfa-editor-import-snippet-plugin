@@ -1,5 +1,7 @@
 @lblod/ember-rdfa-editor-import-snippet-plugin
 ==============================================================================
+:warning: This ember addon is no longer maintained. Please use [@lblod/ember-rdfa-editor-lblod-plugins](https://github.com/lblod/ember-rdfa-editor-lblod-plugins) instead.
+
 Plugin allowing importing of external RDFA snippets and inserting it in the document.
 
 Compatibility
